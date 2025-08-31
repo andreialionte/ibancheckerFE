@@ -1,0 +1,169 @@
+<div class="max-w-6xl mx-auto">
+      <div class="bg-white rounded-xl shadow-lg overflow-hidden">
+        <!-- Header -->
+        <div class="bg-gradient-to-r from-indigo-500 to-purple-600 px-6 py-4">
+          <div class="flex items-center justify-between">
+            <div>
+              <h2 class="text-xl font-bold text-white flex items-center">
+                <span class="mr-2">📊</span>
+                Istoric Operații IBAN
+              </h2>
+              <p class="text-indigo-100 text-sm mt-1">Ultimele operații de generare și validare IBAN</p>
+            </div>
+            <button 
+              (click)="clearHistory()"
+              [disabled]="operations.length === 0"
+              class="bg-white/20 hover:bg-white/30 disabled:bg-white/10 disabled:text-white/50 text-white px-4 py-2 rounded-lg transition-colors text-sm font-medium">
+              🗑️ Șterge Istoricul
+            </button>
+          </div>
+        </div>
+
+        <!-- Filters -->
+        <div class="p-6 border-b border-gray-200">
+          <div class="flex flex-col md:flex-row md:items-center space-y-4 md:space-y-0 md:space-x-4">
+            <div class="flex-1">
+              <input 
+                [(ngModel)]="searchTerm"
+                type="text"
+                placeholder="Căutați după IBAN, bancă..."
+                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
+            </div>
+            <div class="flex items-center space-x-4">
+              <select [(ngModel)]="filterType" class="px-3 py-2 border border-gray-300 rounded-lg text-sm">
+                <option value="">Toate operațiile</option>
+                <option value="GENERATE">Doar generări</option>
+                <option value="VALIDATE">Doar validări</option>
+              </select>
+              <select [(ngModel)]="filterValid" class="px-3 py-2 border border-gray-300 rounded-lg text-sm">
+                <option value="">Valid/Invalid</option>
+                <option value="true">Doar valide</option>
+                <option value="false">Doar invalide</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <!-- Operations List -->
+        <div class="p-6">
+          <div *ngIf="filteredOperations.length === 0" class="text-center py-12">
+            <div class="text-6xl mb-4">📝</div>
+            <h3 class="text-lg font-medium text-gray-900 mb-2">
+              {{operations.length === 0 ? 'Niciun istoric' : 'Niciun rezultat'}}
+            </h3>
+            <p class="text-gray-600">
+              {{operations.length === 0 ? 'Începeți să generați sau să validați IBAN-uri pentru a vedea istoricul aici.' : 'Încercați să modificați criteriile de filtrare.'}}
+            </p>
+          </div>
+
+          <div class="space-y-4">
+            <div 
+              *ngFor="let operation of paginatedOperations; let i = index" 
+              class="bg-gray-50 border border-gray-200 rounded-lg p-4 hover:shadow-sm transition-shadow">
+              
+              <div class="flex items-start justify-between">
+                <!-- Operation Info -->
+                <div class="flex-1">
+                  <div class="flex items-center space-x-3 mb-2">
+                    <!-- Operation Badge -->
+                    <span 
+                      [class]="getOperationBadgeClass(operation)"
+                      class="px-2 py-1 rounded-full text-xs font-medium">
+                      {{operation.operation === 'GENERATE' ? '🔄 Generat' : '🔍 Validat'}}
+                    </span>
+                    
+                    <!-- Valid/Invalid Badge -->
+                    <span 
+                      [class]="operation.valid ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'"
+                      class="px-2 py-1 rounded-full text-xs font-medium">
+                      {{operation.valid ? '✅ Valid' : '❌ Invalid'}}
+                    </span>
+                    
+                    <!-- Timestamp -->
+                    <span class="text-xs text-gray-500">
+                      {{formatDate(operation.timestamp)}}
+                    </span>
+                  </div>
+
+                  <!-- IBAN -->
+                  <div class="mb-3">
+                    <div class="font-mono text-sm bg-white p-3 rounded border border-gray-300 select-all">
+                      {{formatIbanForDisplay(operation.iban)}}
+                    </div>
+                  </div>
+
+                  <!-- Bank Name -->
+                  <div *ngIf="operation.bankName" class="text-sm text-gray-600">
+                    <span class="font-medium">Bancă:</span> {{operation.bankName}}
+                  </div>
+                </div>
+
+                <!-- Actions -->
+                <div class="ml-4 flex flex-col space-y-2">
+                  <button 
+                    (click)="copyToClipboard(operation.iban)"
+                    class="bg-gray-100 hover:bg-gray-200 text-gray-700 px-3 py-1 rounded text-xs transition-colors">
+                    📋 Copiază
+                  </button>
+                  <button 
+                    (click)="revalidateIban(operation.iban)"
+                    class="bg-blue-100 hover:bg-blue-200 text-blue-700 px-3 py-1 rounded text-xs transition-colors">
+                    🔍 Re-validează
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Pagination -->
+          <div *ngIf="totalPages > 1" class="mt-8 flex justify-center items-center space-x-4">
+            <button 
+              (click)="goToPage(currentPage - 1)"
+              [disabled]="currentPage === 1"
+              class="bg-gray-100 hover:bg-gray-200 disabled:bg-gray-50 disabled:text-gray-400 text-gray-700 px-3 py-2 rounded transition-colors text-sm">
+              ← Anterior
+            </button>
+            
+            <div class="flex items-center space-x-2">
+              <button 
+                *ngFor="let page of getPageNumbers()" 
+                (click)="goToPage(page)"
+                [class]="page === currentPage ? 'bg-indigo-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'"
+                class="px-3 py-2 rounded transition-colors text-sm">
+                {{page}}
+              </button>
+            </div>
+            
+            <button 
+              (click)="goToPage(currentPage + 1)"
+              [disabled]="currentPage === totalPages"
+              class="bg-gray-100 hover:bg-gray-200 disabled:bg-gray-50 disabled:text-gray-400 text-gray-700 px-3 py-2 rounded transition-colors text-sm">
+              Următoarea →
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Statistics Card -->
+      <div class="mt-8 bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-xl p-6">
+        <h3 class="text-lg font-semibold text-blue-900 mb-4">📈 Statistici Operații</h3>
+        <div class="grid md:grid-cols-4 gap-4 text-center">
+          <div class="bg-white rounded-lg p-4 border border-blue-200">
+            <div class="text-2xl font-bold text-blue-600">{{getTotalOperations()}}</div>
+            <div class="text-sm text-blue-800">Total Operații</div>
+          </div>
+          <div class="bg-white rounded-lg p-4 border border-green-200">
+            <div class="text-2xl font-bold text-green-600">{{getGeneratedCount()}}</div>
+            <div class="text-sm text-green-800">IBAN Generați</div>
+          </div>
+          <div class="bg-white rounded-lg p-4 border border-purple-200">
+            <div class="text-2xl font-bold text-purple-600">{{getValidatedCount()}}</div>
+            <div class="text-sm text-purple-800">IBAN Validați</div>
+          </div>
+          <div class="bg-white rounded-lg p-4 border border-yellow-200">
+            <div class="text-2xl font-bold text-yellow-600">{{getValidCount()}}</div>
+            <div class="text-sm text-yellow-800">IBAN Valizi</div>
+          </div>
+        </div>
+      </div>
+    </div>
