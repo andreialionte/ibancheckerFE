@@ -7,7 +7,7 @@ import { Bank } from '../../entities/Bank';
   providedIn: 'root'
 })
 export class BankService {
-  private readonly API_URL = 'https://ibancheckerbe-sparkling-morning-6756.fly.dev/banks';  //localhost:8080
+  private readonly API_URL = 'http://localhost:8080/api/banks';  //localhost:8080
   private banksSubject = new BehaviorSubject<Bank[]>([]);
   public banks$ = this.banksSubject.asObservable();
 

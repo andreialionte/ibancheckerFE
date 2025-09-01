@@ -8,7 +8,7 @@ import { CommonModule } from '@angular/common';
 
 @Component({
   selector: 'app-root',
-  imports: [RouterOutlet, IbanValidator, BankListComponent, HistoryComponent, IbanGeneratorComponent, CommonModule],
+  imports: [RouterOutlet, IbanValidator, HistoryComponent, IbanGeneratorComponent, CommonModule],
   templateUrl: './app.html',
   styleUrl: './app.css'
 })
@@ -18,7 +18,7 @@ export class App {
   tabs = [
     { id: 'generate', label: 'Generator IBAN', icon: '🔄' },
     { id: 'validate', label: 'Validator IBAN', icon: '✅' },
-    { id: 'banks', label: 'Lista Bănci', icon: '🏦' },
+    // { id: 'banks', label: 'Lista Bănci', icon: '🏦' },
     { id: 'history', label: 'Istoric', icon: '📊' }
   ];
 
